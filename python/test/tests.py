@@ -39,7 +39,7 @@ def make_random_model():
 
 
 def test_eigenvalue_allocation():
-    a = pkl.load(open(relpath('./testdata/test_eigenvalue_allocation_input.pkl')))
+    a = pkl.load(open(relpath('./testdata/test_eigenvalue_allocation_input.pkl'), 'rb'), encoding='bytes')
 
     vals, vecs = np.linalg.eigh(a)
     res = eigenvalue_allocation(4, vals)
@@ -73,8 +73,10 @@ def test_eigenvalue_allocation_normalized_features():
 
 
 def test_accumulate_covariance_estimators():
-    data, centroids = pkl.load(open(relpath('./testdata/test_accumulate_covariance_estimators_input.pkl')))
-    expected = pkl.load(open(relpath('./testdata/test_accumulate_covariance_estimators_output.pkl')))
+    data, centroids = pkl.load(
+        open(relpath('./testdata/test_accumulate_covariance_estimators_input.pkl'), 'rb'), encoding='bytes')
+    expected = pkl.load(
+        open(relpath('./testdata/test_accumulate_covariance_estimators_output.pkl'), 'rb'), encoding='bytes')
 
     actual = accumulate_covariance_estimators(data, centroids)
 
@@ -96,8 +98,10 @@ def test_accumulate_covariance_estimators():
 
 def test_compute_rotations_from_accumulators():
 
-    A, mu, count, num_buckets = pkl.load(open(relpath('./testdata/test_compute_rotations_from_accumulators_input.pkl')))
-    expected = pkl.load(open(relpath('./testdata/test_compute_rotations_from_accumulators_output.pkl')))
+    A, mu, count, num_buckets = pkl.load(
+        open(relpath('./testdata/test_compute_rotations_from_accumulators_input.pkl'), 'rb'), encoding='bytes')
+    expected = pkl.load(
+        open(relpath('./testdata/test_compute_rotations_from_accumulators_output.pkl'), 'rb'), encoding='bytes')
 
     actual = compute_rotations_from_accumulators(A, mu, count, num_buckets)
 
@@ -229,7 +233,7 @@ def searcher_instance_battery(searcher, q):
 
 
 def test_searcher():
-    data = pkl.load(open(relpath('./testdata/test_searcher_data.pkl')))
+    data = pkl.load(open(relpath('./testdata/test_searcher_data.pkl'), 'rb'), encoding='bytes')
     m = LOPQModel.load_proto(relpath('./testdata/random_test_model.lopq'))
 
     q = np.ones(8)
@@ -249,7 +253,7 @@ def test_searcher():
 def test_searcher_lmdb():
     import shutil
 
-    data = pkl.load(open(relpath('./testdata/test_searcher_data.pkl')))
+    data = pkl.load(open(relpath('./testdata/test_searcher_data.pkl'), 'rb'), encoding='bytes')
     m = LOPQModel.load_proto(relpath('./testdata/random_test_model.lopq'))
 
     lmbd_test_path = './test_lopq_lmbd'

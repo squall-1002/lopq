@@ -62,18 +62,18 @@ def train_coarse(sc, split_vecs, V, seed=None):
     # Cluster first split
     first = split_vecs.map(lambda x: x[0])
     first.cache()
-    print 'Total training set size: %d' % first.count()
-    print 'Starting training coarse quantizer...'
+    print('Total training set size: %d' % first.count())
+    print('Starting training coarse quantizer...')
     C0 = KMeans.train(first, V, initializationMode='random', maxIterations=10, seed=seed)
-    print '... done training coarse quantizer.'
+    print('... done training coarse quantizer.')
     first.unpersist()
 
     # Cluster second split
     second = split_vecs.map(lambda x: x[1])
     second.cache()
-    print 'Starting training coarse quantizer...'
+    print('Starting training coarse quantizer...')
     C1 = KMeans.train(second, V, initializationMode='random', maxIterations=10, seed=seed)
-    print '... done training coarse quantizer.'
+    print('... done training coarse quantizer.')
     second.unpersist()
 
     return np.vstack(C0.clusterCenters), np.vstack(C1.clusterCenters)
@@ -87,9 +87,9 @@ def train_rotations(sc, split_vecs, M, Cs):
     Rs = []
     mus = []
     counts = []
-    for split in xrange(2):
+    for split in range(2):
 
-        print 'Starting rotation fitting for split %d' % split
+        print('Starting rotation fitting for split %d' % split)
 
         # Get the data for this split
         data = split_vecs.map(lambda x: x[split])
@@ -218,7 +218,7 @@ def train_subquantizers(sc, split_vecs, M, subquantizer_clusters, model, seed=No
     split_vecs.cache()
 
     subquantizers = []
-    for split in xrange(M):
+    for split in range(M):
         data = split_vecs.map(lambda x: x[split])
         data.cache()
         sub = KMeans.train(data, subquantizer_clusters, initializationMode='random', maxIterations=10, seed=seed)
@@ -233,12 +233,12 @@ def save_hdfs_pickle(m, pkl_path):
     Given a python object and a path on hdfs, save the object as a pickle file locally and copy the file
     to the hdfs path.
     """
-    print 'Saving pickle to temp file...'
+    print('Saving pickle to temp file...')
     f = NamedTemporaryFile(delete=False)
     pkl.dump(m, f, -1)
     f.close()
 
-    print 'Copying pickle file to hdfs...'
+    print('Copying pickle file to hdfs...')
     copy_to_hdfs(f, pkl_path)
     os.remove(f.name)
 
@@ -248,12 +248,12 @@ def save_hdfs_proto(m, proto_path):
     Given an LOPQModel object and a path on hdfs, save the model parameters as a protobuf file locally and
     copy the file to the hdfs path.
     """
-    print 'Saving protobuf to temp file...'
+    print('Saving protobuf to temp file...')
     f = NamedTemporaryFile(delete=False)
     m.export_proto(f)
     f.close()
 
-    print 'Copying proto file to hdfs...'
+    print('Copying proto file to hdfs...')
     copy_to_hdfs(f, proto_path)
     os.remove(f.name)
 
@@ -272,56 +272,59 @@ def validate_arguments(args, model):
 
     # Check that the steps make sense
     if STEP_ROTATION not in args.steps and len(args.steps) == 2:
-        print 'Training steps invalid'
+        print('Training steps invalid')
         sys.exit(1)
 
     # Find parameters and warn of possibly unintentional discrepancies
     if args.V is None:
         if model is not None:
             args.V = model.V
-            print 'Parameter V not specified: using V=%d from provided model.' % model.V
+            print('Parameter V not specified: using V=%d from provided model.' % model.V)
         else:
-            print 'Parameter V not specified and no existing model provided. Exiting.'
+            print('Parameter V not specified and no existing model provided. Exiting.')
             sys.exit(1)
     else:
         if model is not None and model.V != args.V:
             if STEP_COARSE in args.steps:
-                print 'Parameter V differs between command line argument and provided model: ' + \
-                      'coarse quantizers will be trained with V=%d' % args.V
+                print('Parameter V differs between command line argument and provided model: '
+                      'coarse quantizers will be trained with V=%d' % args.V)
             else:
-                print 'Parameter V differs between command line argument and provided model: ' + \
-                      'coarse quantizers must be retrained or this discrepancy corrected. Exiting.'
+                print('Parameter V differs between command line argument and provided model: '
+                      'coarse quantizers must be retrained or this discrepancy corrected. Exiting.')
                 sys.exit(1)
 
     if STEP_ROTATION in args.steps or STEP_SUBQUANT in args.steps:
         if args.M is None:
             if model is not None:
                 args.M = model.M
-                print 'Parameter M not specified: using M=%d from provided model.' % model.M
+                print('Parameter M not specified: using M=%d from provided model.' % model.M)
             else:
-                print 'Parameter M not specified and no existing model provided. Exiting.'
+                print('Parameter M not specified and no existing model provided. Exiting.')
                 sys.exit(1)
         else:
             if model is not None and model.M != args.M:
                 if STEP_ROTATION in args.steps:
-                    print 'Parameter M differs between command line argument and provided model: ' + \
-                          'model will be trained with M=%d' % args.M
+                    print('Parameter M differs between command line argument and provided model: '
+                          'model will be trained with M=%d' % args.M)
                 else:
-                    print 'Parameter M differs between command line argument and provided model: ' + \
-                          'rotations must be retrained or this discrepancy corrected. Exiting.'
+                    print('Parameter M differs between command line argument and provided model: '
+                          'rotations must be retrained or this discrepancy corrected. Exiting.')
                     sys.exit(1)
 
     if STEP_ROTATION in args.steps:
         if STEP_COARSE not in args.steps and (model is None or model.Cs is None):
-            print 'Cannot train rotations without coarse quantizers. Either train coarse quantizers or provide an existing model. Exiting.'
+            print('Cannot train rotations without coarse quantizers. '
+                  'Either train coarse quantizers or provide an existing model. Exiting.')
             sys.exit(1)
 
     if STEP_SUBQUANT in args.steps:
         if STEP_COARSE not in args.steps and (model is None or model.Cs is None):
-            print 'Cannot train subquantizers without coarse quantizers. Either train coarse quantizers or provide an existing model. Exiting.'
+            print('Cannot train subquantizers without coarse quantizers. '
+                  'Either train coarse quantizers or provide an existing model. Exiting.')
             sys.exit(1)
         if STEP_ROTATION not in args.steps and (model is None or model.Rs is None or model.mus is None):
-            print 'Cannot train subquantizers without rotations. Either train rotations or provide an existing model. Exiting.'
+            print('Cannot train subquantizers without rotations. '
+                  'Either train rotations or provide an existing model. Exiting.')
             sys.exit(1)
 
     return args

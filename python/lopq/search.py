@@ -56,7 +56,7 @@ def multisequence(x, centroids):
     # Initialize priority queue
     h = []
     traversed = set()
-    start_inds = tuple(0 for _ in xrange(splits))
+    start_inds = tuple(0 for _ in range(splits))
     start_dist = dist_for_cell(cell_for_inds(start_inds))
     heapq.heappush(h, (start_dist, start_inds))
 
@@ -206,7 +206,7 @@ class LOPQSearcherBase(object):
             Result = namedtuple('Result', ['id', 'code'])
             results = map(lambda d: Result(d[1][0], d[1]), results)
 
-        return results, visited
+        return list(results), visited
 
     def add_codes(self, codes, ids=None):
         """
@@ -277,7 +277,7 @@ class LOPQSearcher(LOPQSearcherBase):
 
 
 class LOPQSearcherLMDB(LOPQSearcherBase):
-    def __init__(self, model, lmdb_path, id_lambda=int):
+    def __init__(self, model, lmdb_path, id_lambda=lambda x: int.from_bytes(x, byteorder='big')):
         """
         Create an LOPQSearcher instance that encapsulates retrieving and ranking
         with LOPQ. Requires an LOPQModel instance. This class uses an lmbd database
@@ -298,7 +298,7 @@ class LOPQSearcherLMDB(LOPQSearcherBase):
         self.id_lambda = id_lambda
 
         self.env = lmdb.open(self.lmdb_path, map_size=1024*2000000*2, writemap=False, map_async=True, max_dbs=1)
-        self.index_db = self.env.open_db("index")
+        self.index_db = self.env.open_db(b"index")
 
     def encode_cell(self, cell):
         return array.array("H", cell).tostring()

@@ -97,7 +97,7 @@ def main():
     searcher = LOPQSearcher(m)
     searcher.add_data(train)
     recall, _ = get_recall(searcher, test, nns)
-    print 'Recall (V=%d, M=%d, subquants=%d): %s' % (m.V, m.M, m.subquantizer_clusters, str(recall))
+    print('Recall (V=%d, M=%d, subquants=%d): %s' % (m.V, m.M, m.subquantizer_clusters, str(recall)))
 
     # We can experiment with other hyperparameters without discarding all
     # parameters everytime. Here we train a new model that uses the same coarse
@@ -109,7 +109,7 @@ def main():
     searcher = LOPQSearcher(m2)
     searcher.add_data(train)
     recall, _ = get_recall(searcher, test, nns)
-    print 'Recall (V=%d, M=%d, subquants=%d): %s' % (m2.V, m2.M, m2.subquantizer_clusters, str(recall))
+    print('Recall (V=%d, M=%d, subquants=%d): %s' % (m2.V, m2.M, m2.subquantizer_clusters, str(recall)))
 
     # The recall is probably higher. We got better recall with a finer quantization
     # at the expense of more data required for index items.
@@ -122,7 +122,7 @@ def main():
     searcher = LOPQSearcher(m3)
     searcher.add_data(train)
     recall, _ = get_recall(searcher, test, nns)
-    print 'Recall (V=%d, M=%d, subquants=%d): %s' % (m3.V, m3.M, m3.subquantizer_clusters, str(recall))
+    print('Recall (V=%d, M=%d, subquants=%d): %s' % (m3.V, m3.M, m3.subquantizer_clusters, str(recall)))
 
     # The recall is probably better than the first but worse than the second. We increased recall
     # only a little by increasing the number of model parameters (double the subquatizer centroids),

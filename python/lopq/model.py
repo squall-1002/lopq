@@ -6,6 +6,7 @@ import logging
 import sys
 from collections import namedtuple
 from .utils import iterate_splits, predict_cluster
+from functools import reduce
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
@@ -38,7 +39,7 @@ def eigenvalue_allocation(num_buckets, eigenvalues):
         a vector of indices by which to permute the eigenvectors
     """
     D = len(eigenvalues)
-    dims_per_bucket = D / num_buckets
+    dims_per_bucket = D // num_buckets
     eigenvalue_product = np.zeros(num_buckets, dtype=float)
     bucket_size = np.zeros(num_buckets, dtype=int)
     permutation = np.zeros((num_buckets, dims_per_bucket), dtype=int)
@@ -139,7 +140,7 @@ def accumulate_covariance_estimators(data, C):
     residuals = np.zeros((N, D))            # residual for data points given cluster assignment
 
     # Iterate data points, accumulate estimators
-    for i in xrange(N):
+    for i in range(N):
         d = data[i]
 
         # Find cluster assignment and residual
@@ -182,7 +183,7 @@ def compute_rotations_from_accumulators(A, mu, count, num_buckets):
 
     # For each cluster, use accumulator variables to estimate covariance matrix
     # and compute rotation matrix
-    for i in xrange(V):
+    for i in range(V):
 
         # Normalize
         num_points = count[i]
@@ -226,7 +227,7 @@ def project_residuals_to_local(residuals, assignments, Rs, mu):
         an NxD array of locally projected residuals
     """
     projected = np.zeros(residuals.shape)
-    for i in xrange(residuals.shape[0]):
+    for i in range(residuals.shape[0]):
         res = residuals[i]
         a = assignments[i]
         projected[i] = np.dot(Rs[a], res - mu[a])
@@ -353,8 +354,8 @@ def train(data, V=8, M=4, subquantizer_clusters=256, parameters=None,
         mu1, mu2 = mus
         assignments1 = assignments2 = residuals1 = residuals2 = None
     else:
-        Rs1, mu1, assignments1, residuals1 = compute_local_rotations(first_half, C1, M / 2)
-        Rs2, mu2, assignments2, residuals2 = compute_local_rotations(second_half, C2, M / 2)
+        Rs1, mu1, assignments1, residuals1 = compute_local_rotations(first_half, C1, M // 2)
+        Rs2, mu2, assignments2, residuals2 = compute_local_rotations(second_half, C2, M // 2)
 
     # Subquantizers don't need as much data, so we could sample here
     subquantizer_sample_ratio = min(subquantizer_sample_ratio, 1.0)
@@ -437,7 +438,7 @@ class LOPQModel(object):
             self.M = self.num_fine_splits * self.num_coarse_splits
             self.subquantizer_clusters = self.subquantizers[0][0].shape[0]
         else:
-            self.num_fine_splits = M / 2
+            self.num_fine_splits = M // 2
             self.M = M
             self.subquantizer_clusters = subquantizer_clusters
 
@@ -690,7 +691,8 @@ class LOPQModel(object):
         Rs = tuple(map(np.squeeze, np.split(d['Rs'], 2, axis=0)))
         mus = tuple(map(np.squeeze, np.split(d['mus'], 2, axis=0)))
 
-        subs = tuple([map(np.squeeze, np.split(half, M / 2, axis=0)) for half in map(np.squeeze, np.split(d['subs'], 2, axis=0))])
+        subs = tuple([list(map(np.squeeze, np.split(half, M / 2, axis=0)))
+                      for half in map(np.squeeze, np.split(d['subs'], 2, axis=0))])
 
         return LOPQModel(parameters=(Cs, Rs, mus, subs))
 
@@ -743,12 +745,12 @@ class LOPQModel(object):
         from .utils import concat_new_first
 
         def halves(arr):
-            return [arr[:len(arr) / 2], arr[len(arr) / 2:]]
+            return [arr[:len(arr) // 2], arr[len(arr) // 2:]]
 
         lopq_params = LOPQModelParams()
 
         try:
-            f = open(filename)
+            f = open(filename, 'rb')
             lopq_params.ParseFromString(f.read())
             f.close()
 
@@ -756,14 +758,14 @@ class LOPQModel(object):
             if len(lopq_params.Cs) != 0:
                 Cs = [np.reshape(C.values, C.shape) for C in lopq_params.Cs]
             if len(lopq_params.Rs) != 0:
-                Rs = map(concat_new_first, halves([np.reshape(R.values, R.shape) for R in lopq_params.Rs]))
+                Rs = list(map(concat_new_first, halves([np.reshape(R.values, R.shape) for R in lopq_params.Rs])))
             if len(lopq_params.mus) != 0:
-                mus = map(concat_new_first, halves([np.array(mu.values) for mu in lopq_params.mus]))
+                mus = list(map(concat_new_first, halves([np.array(mu.values) for mu in lopq_params.mus])))
             if len(lopq_params.subs) != 0:
                 subs = halves([np.reshape(sub.values, sub.shape) for sub in lopq_params.subs])
 
             return LOPQModel(parameters=(Cs, Rs, mus, subs))
 
         except IOError:
-            print filename + ": Could not open file."
+            print(filename + ": Could not open file.")
             return None

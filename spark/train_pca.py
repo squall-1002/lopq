@@ -76,12 +76,12 @@ def save_hdfs_pickle(m, pkl_path):
     Given a python object and a path on hdfs, save the object as a pickle file locally and copy the file
     to the hdfs path.
     """
-    print 'Saving pickle to temp file...'
+    print('Saving pickle to temp file...')
     f = NamedTemporaryFile(delete=False)
     pkl.dump(m, f, -1)
     f.close()
 
-    print 'Copying pickle file to hdfs...'
+    print('Copying pickle file to hdfs...')
     copy_to_hdfs(f, pkl_path)
     os.remove(f.name)
 
